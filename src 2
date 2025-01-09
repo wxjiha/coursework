@@ -1,0 +1,95 @@
+import java.security.*;
+import java.util.*;
+
+public class AuthenticationProtocol {
+    private static final String ALGORITHM = "RSA";
+
+    // Simulate KeyPairs for Alice, Bob, and the Server
+    private static KeyPair aliceKeyPair, bobKeyPair, serverKeyPair;
+
+    public static void main(String[] args) throws Exception {
+        // Step 1: Generate key pairs for Alice, Bob, and Server
+        generateKeyPairs();
+
+        // Step 2: Demonstrate the protocol flow
+        step1RequestBobPublicKey();
+        step2ServerSendsBobPublicKey();
+        step3AliceSendsNonceToBob();
+        step4RequestAlicePublicKey();
+        step5ServerSendsAlicePublicKey();
+        step6BobSendsNonceBack();
+        step7AliceSendsNonceBackToBob();
+    }
+
+    // Generate RSA KeyPairs for Alice, Bob, and Server
+    private static void generateKeyPairs() throws NoSuchAlgorithmException {
+        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(ALGORITHM);
+        keyPairGenerator.initialize(2048);
+
+        // Alice's keys
+        aliceKeyPair = keyPairGenerator.generateKeyPair();
+
+        // Bob's keys
+        bobKeyPair = keyPairGenerator.generateKeyPair();
+
+        // Server's keys
+        serverKeyPair = keyPairGenerator.generateKeyPair();
+    }
+
+    // Step 1: Alice requests Bob's public key from the server
+    private static void step1RequestBobPublicKey() {
+        System.out.println("Step 1: Alice requests Bob's public key from the server.");
+        System.out.println("Message: A → S : A, B");
+    }
+
+    // Step 2: Server sends Bob's public key to Alice
+    private static void step2ServerSendsBobPublicKey() throws Exception {
+        System.out.println("Step 2: Server sends Bob's public key to Alice.");
+        String message = "Bob's public key";
+        byte[] signedMessage = signMessage(message, serverKeyPair.getPrivate());
+        System.out.println("Message: S → A : (KB, B).kS " + Arrays.toString(signedMessage));
+    }
+
+    // Step 3: Alice sends a nonce to Bob
+    private static void step3AliceSendsNonceToBob() {
+        System.out.println("Step 3: Alice sends a nonce to Bob.");
+        int nonceA = new Random().nextInt(1000);
+        System.out.println("Message: A → B : (nA, A).KB, where nA = " + nonceA);
+    }
+
+    // Step 4: Bob requests Alice's public key from the server
+    private static void step4RequestAlicePublicKey() {
+        System.out.println("Step 4: Bob requests Alice's public key from the server.");
+        System.out.println("Message: B → S : B, A");
+    }
+
+    // Step 5: Server sends Alice's public key to Bob
+    private static void step5ServerSendsAlicePublicKey() throws Exception {
+        System.out.println("Step 5: Server sends Alice's public key to Bob.");
+        String message = "Alice's public key";
+        byte[] signedMessage = signMessage(message, serverKeyPair.getPrivate());
+        System.out.println("Message: S → B : (KA, A).kS " + Arrays.toString(signedMessage));
+    }
+
+    // Step 6: Bob sends his nonce and Alice's nonce back to Alice
+    private static void step6BobSendsNonceBack() {
+        System.out.println("Step 6: Bob sends nonce and Alice's nonce back to Alice.");
+        int nonceB = new Random().nextInt(1000);
+        System.out.println("Message: B → A : (nA, nB).KA where nA = " + nonceB);
+    }
+
+    // Step 7: Alice sends Bob's nonce back
+    private static void step7AliceSendsNonceBackToBob() {
+        System.out.println("Step 7: Alice sends Bob's nonce back.");
+        int nonceB = new Random().nextInt(1000);
+        System.out.println("Message: A → B : (nB).KB");
+    }
+
+    // Utility function for signing a message
+    private static byte[] signMessage(String message, PrivateKey privateKey) throws Exception {
+        Signature signature = Signature.getInstance("SHA256withRSA");
+        signature.initSign(privateKey);
+        signature.update(message.getBytes());
+        return signature.sign();
+    }
+}
